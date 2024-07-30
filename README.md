@@ -33,7 +33,7 @@ And of course all items could be in unknown state when restarting; to avoid a lo
 | `--item` / `-I`     | Check a specific item (see examples below). Mutually exclusive to `--stats`
 | `--warning` / `-W`  | Value Icinga 2 should exit WARNING for (see [examples](#examples))
 | `--critical` / `-C` | Value Icinga 2 should exit CRITICAL for (see [examples](#examples))
-| `--user` / `-U`     | Username which should be used to authenticate against openHAB 3 (or set API token here when)
+| `--user` / `-U`     | Username which should be used to authenticate against openHAB 3 (or set API token here)
 | `--password` / `-p` | Password which should be used to authenticate against openHAB 3
 
 # Icinga 2 CheckCommand
@@ -46,7 +46,7 @@ object CheckCommand "openhab" {
         "--host" = "$openhab_host$"
         "--port" = "$openhab_port$"
         "--item" = {
-		description = "openHAB 2 item name"
+		description = "openHAB item name"
 		value = "$openhab_item$"
 		}
         "--warning" = "$openhab_warning$"
