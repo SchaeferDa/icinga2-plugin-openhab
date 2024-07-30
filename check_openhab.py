@@ -57,9 +57,11 @@ def main():
     mode = main_parser.add_mutually_exclusive_group()
     mode.add_argument('--stats', '-S', action='store_true', help='Get general statistics about your openHAB installation.')
     mode.add_argument('--item', '-I', dest='item', help='Item to get state or value off.')
+    mode.add_argument('--thing', '-T', dest='thing', help='Thing to get state or value off.')
 
     main_parser.add_argument('--warning', '-W', help='Optional when using --item. WARNING value; see docs.')
     main_parser.add_argument('--critical', '-C', help='Optional when using --item. CRITICAL value; see docs.')
+    main_parser.add_argument('--invert', '-i', action='store_true', help='Invert compare direction.')
 
     main_parser.add_argument('--user', '-U', help='Optional when authentication is needed. USER value; see docs.')
     main_parser.add_argument('--password', '-p', help='Optional when authentication is needed. PASSWORD value; see docs.')
@@ -114,18 +116,44 @@ def main():
 
             if args.critical:
                 crit = float(args.critical)
-                if itemstate > crit:
-                    icinga_critical(exit_msg)
+                if args.invert:
+                    if itemstate < crit:
+                        icinga_crtitical(exit_msg)
+                else:
+                    if itemstate > crit:
+                        icinga_critical(exit_msg)
 
             if args.warning:
                 warn = float(args.warning)
-                if itemstate > warn:
-                    icinga_warning(exit_msg)
+                if args.invert:
+                    if itemstate < warn:
+                        icinga_warning(exit_msg)
+                else:
+                    if itemstate > warn:
+                        icinga_warning(exit_msg)
 
             icinga_ok(exit_msg)
 
+    elif args.thing:
+        thingvalue = openHAB_request(restapi + '/things/' + args.thing, auth)
+        thingstatus = str(thingvalue['statusInfo']['status'])
+        thingstatusdetail = str(thingvalue['statusInfo']['statusDetail'])
+
+        if thingstatus == 'ONLINE':
+            icinga_ok(thingvalue['label'] + ' ' + thingstatus)
+        elif thingstatus == 'OFFLINE':
+            if thingstatusdetail != 'NONE':
+                icinga_critical(thingvalue['label'] + ' ' + thingstatus + ' - ' + thingstatusdetail)
+            else:
+                icinga_critical(thingvalue['label'] + ' ' + thingstatus)
+        else:
+            if thingstatusdetail != 'NONE':
+                icinga_warning(thingvalue['label'] + ' ' + thingstatus + ' - ' + thingstatusdetail)
+            else:
+                icinga_warning(thingvalue['label'] + ' ' + thingstatus)
+
     else:
-        exit_msg = 'Choose either --stats or --item.'
+        exit_msg = 'Choose either --stats, --item or --thing'
         icinga_unknown(exit_msg)
 
 if __name__ == "__main__":
